@@ -1,0 +1,401 @@
+#include <sstream>
+#include <iostream>
+#include <windows.h>
+#include <conio.h>
+#include <iomanip>
+#include <fstream>
+#include <string>
+#include <vector>
+
+using namespace std;
+
+struct Osoba {
+    int id;
+    string imie, nazwisko, nrTel, adresZamieszkania, email;
+};
+
+string wczytajLinie() {
+    string wejscie = "";
+    cin.sync();
+    getline(cin, wejscie);
+    return wejscie;
+}
+
+char wczytajZnak() {
+    string wejscie = "";
+    char znak = {0};
+    cout << "Podaj znak: ";
+
+    while (true) {
+        cin.sync();
+        wejscie = wczytajLinie();
+        if (wejscie.length() == 1) {
+            znak = wejscie[0];
+            break;
+        }
+        cout << "To nie jest znak. Podaj ponownie: ";
+    }
+    return znak;
+}
+
+void pokazKomunikatKoncowy() {
+    cout << endl << "Wcisnij enter zeby wyjsc do menu glownego: ";
+    getch();
+}
+
+void wyswietlInformacjeOBrakuOsob(int brakOsob, string tresc) {
+    if (brakOsob == 0) {
+        cout << "Brak osob o takim " << tresc;
+    }
+}
+
+void podzielCiagNaDaneOsoby(string wiersz, char separator, vector<string>& wszystkieDaneOsoby) {
+    stringstream ss(wiersz);
+    string danaOsoby;
+
+    while (!ss.eof()) {
+        getline(ss, danaOsoby, separator);
+        wszystkieDaneOsoby.push_back(danaOsoby);
+    }
+}
+
+Osoba wczytajDaneOsoby(vector<string> wszystkieDaneOsoby, vector<Osoba>& osoby) {
+    Osoba przechowywalniaDanych;
+
+    przechowywalniaDanych.id = (stoi(wszystkieDaneOsoby[0]));
+    przechowywalniaDanych.imie = wszystkieDaneOsoby[1];
+    przechowywalniaDanych.nazwisko = wszystkieDaneOsoby[2];
+    przechowywalniaDanych.nrTel = wszystkieDaneOsoby[3];
+    przechowywalniaDanych.adresZamieszkania = wszystkieDaneOsoby[4];
+    przechowywalniaDanych.email = wszystkieDaneOsoby[5];
+
+    osoby.push_back(przechowywalniaDanych);
+    return przechowywalniaDanych;
+}
+
+void wczytajOsobyZPliku(vector<Osoba>& osoby) {
+    string wiersz = "";
+    char separator = '|';
+
+    fstream plikTekstowy;
+
+    plikTekstowy.open("ksiazkaAdresowaWektor.txt", ios::app); //gdy nie ma jeszcze utworzonego pliku tworzy go
+    plikTekstowy.close();
+
+    plikTekstowy.open("ksiazkaAdresowaWektor.txt", ios::in);
+
+    vector<string> wszystkieDaneOsoby;
+
+    while (!plikTekstowy.eof()) {
+        getline(plikTekstowy, wiersz);
+        if (wiersz == "") {
+            continue;
+        } else {
+            wszystkieDaneOsoby.clear();
+            podzielCiagNaDaneOsoby(wiersz, separator, wszystkieDaneOsoby);
+            wczytajDaneOsoby(wszystkieDaneOsoby, osoby);
+        }
+    }
+    plikTekstowy.close();
+}
+
+char wyswietlMenuGlowne() {
+    char wybor = {0};
+    system("cls");
+    cout << "KSIAZKA ADRESOWA" << endl;
+    cout << "1. Dodaj adresata  " << endl;
+    cout << "2. Wyszukaj po imieniu  " << endl;
+    cout << "3. Wyszukaj po nazwisku  " << endl;
+    cout << "4. Wyswietl wszystkich adresatow  " << endl;
+    cout << "5. Usun adresata  " << endl;
+    cout << "6. Edytuj adresata  " << endl;
+    cout << "9. Zakoncz program  " << endl;
+    return wybor = wczytajZnak();
+}
+
+string polaczDaneWJedenCiag(Osoba przechowywalniaDanych) {
+    string separator = "|";
+    string daneDodawanejOsoby = "";
+    string IDstr = to_string(przechowywalniaDanych.id);
+
+    daneDodawanejOsoby += IDstr + separator;
+    daneDodawanejOsoby += przechowywalniaDanych.imie + separator;
+    daneDodawanejOsoby += przechowywalniaDanych.nazwisko + separator;
+    daneDodawanejOsoby += przechowywalniaDanych.nrTel + separator;
+    daneDodawanejOsoby += przechowywalniaDanych.adresZamieszkania + separator;
+    daneDodawanejOsoby += przechowywalniaDanych.email + separator;
+
+    return daneDodawanejOsoby;
+}
+
+void dodajOsobe(vector<Osoba>& osoby) {
+    string daneDodawanejOsoby;
+    Osoba przechowywalniaDanych;
+
+    fstream plikTekstowy;
+    plikTekstowy.open("ksiazkaAdresowaWektor.txt", ios::out | ios::app);
+
+    if (plikTekstowy.good() == true) {
+        if (osoby.size() == 0) {
+            przechowywalniaDanych.id = 1;
+        } else {
+            przechowywalniaDanych.id = osoby.back().id + 1;
+        }
+        cout << setw(20) << "Podaj imie:               ";
+        przechowywalniaDanych.imie = wczytajLinie();
+        cout << setw(20) << "Podaj nazwisko:           ";
+        przechowywalniaDanych.nazwisko = wczytajLinie();
+        cout << setw(20) << "Podaj numer telefonu:     ";
+        przechowywalniaDanych.nrTel = wczytajLinie();
+        cout << setw(20) << "Podaj adres zamieszkania: ";
+        przechowywalniaDanych.adresZamieszkania = wczytajLinie();
+        cout << setw(20) << "Podaj email:              ";
+        przechowywalniaDanych.email = wczytajLinie();
+
+        osoby.push_back(przechowywalniaDanych);
+
+        if (osoby.size() == 1) {
+            daneDodawanejOsoby = polaczDaneWJedenCiag(przechowywalniaDanych);
+            plikTekstowy << daneDodawanejOsoby;
+        } else {
+            daneDodawanejOsoby = polaczDaneWJedenCiag(przechowywalniaDanych);
+            plikTekstowy << endl << daneDodawanejOsoby;
+        }
+
+        cout << "Dane osoby zostaly poprawnie zapisane" << endl;
+        system("pause");
+
+    } else {
+        cout << "Nie udalo sie  otworzyc pliku tekstowego i zapisac do niego danych" << endl;
+        system("pause");
+    }
+
+    plikTekstowy.close();
+}
+
+void rekonstruujPlik(vector <Osoba> osoby) {
+    string daneDodawanejOsoby;
+    fstream plikTekstowy;
+
+    plikTekstowy.open("ksiazkaAdresowaWektor.txt", ios::out);
+
+    daneDodawanejOsoby = polaczDaneWJedenCiag(osoby[0]);
+    plikTekstowy  << daneDodawanejOsoby;
+
+    for (unsigned int i = 1; i < osoby.size(); i++) {
+        daneDodawanejOsoby = polaczDaneWJedenCiag(osoby[i]);
+        plikTekstowy  << endl << daneDodawanejOsoby;
+    }
+
+    plikTekstowy.close();
+}
+
+void wyswietlPodsumowanieDanych(Osoba kolejnaOsoba) {
+    cout << endl << setw(20) << "ID osoby:           " << kolejnaOsoba.id << endl;
+    cout << setw(20) << "Imie:               " << kolejnaOsoba.imie << endl;
+    cout << setw(20) << "Nazwisko:           " << kolejnaOsoba.nazwisko << endl;
+    cout << setw(20) << "Numer telefonu:     " << kolejnaOsoba.nrTel << endl;
+    cout << setw(20) << "Adres zamieszkania: " << kolejnaOsoba.adresZamieszkania << endl;
+    cout << setw(20) << "Email:              " << kolejnaOsoba.email << endl;
+}
+
+void znajdzOsobePoImieniu(vector<Osoba> osoby) {
+    string wejscie = "";
+    string tresc = "imieniu";
+    int brakOsob = 0;
+
+    system("cls");
+    cout << "Wpisz imie szukanej osoby: ";
+
+    wejscie = wczytajLinie();
+
+    for (Osoba kolejnaOsoba : osoby) {
+        if (kolejnaOsoba.imie == wejscie) {
+            wyswietlPodsumowanieDanych(kolejnaOsoba);
+            brakOsob++;
+        }
+    }
+
+    wyswietlInformacjeOBrakuOsob(brakOsob, tresc);
+    pokazKomunikatKoncowy();;
+}
+
+void znajdzOsobePoNazwisku(vector<Osoba> osoby) {
+    string wejscie = "";
+    string tresc = "nazwisku";
+    int brakOsob = 0;
+
+    system("cls");
+    cout << "Wpisz nazwisko szukanej osoby: ";
+
+    wejscie = wczytajLinie();
+
+    for (Osoba kolejnaOsoba : osoby) {
+        if (kolejnaOsoba.nazwisko == wejscie) {
+            wyswietlPodsumowanieDanych(kolejnaOsoba);
+            brakOsob++;
+        }
+    }
+
+    wyswietlInformacjeOBrakuOsob(brakOsob, tresc);
+    pokazKomunikatKoncowy();
+}
+
+void pokazWszystkieOsoby(vector<Osoba> osoby) {
+    int brakOsob = 0;
+
+    system("cls");
+
+    for (Osoba kolejnaOsoba : osoby) {
+        wyswietlPodsumowanieDanych(kolejnaOsoba);
+        brakOsob++;
+    }
+
+    if (brakOsob == 0) {
+        cout << "Ksizaka adresowa jest pusta";
+    }
+
+    pokazKomunikatKoncowy();
+}
+
+void usunOsobe(vector<Osoba>& osoby) {
+    int wejscie;
+    int brakOsob = 0;
+    char znak;
+    string tresc = "id";
+
+    system("cls");
+    cout << "Wpisz id osoby ktora chcesz usunac: ";
+
+    wejscie = stoi(wczytajLinie());
+
+    for (int i = 0; i < (int) osoby.size(); i++) {
+        if (osoby[i].id == wejscie) {
+            wyswietlPodsumowanieDanych(osoby[i]);
+            cout << "Czy napewno chcesz usunac podana osobe? <t-tak><pozostale-nie> ";
+            znak = wczytajZnak();
+
+            if (znak == 't') {
+                osoby.erase(osoby.begin() + i);
+                rekonstruujPlik(osoby);
+                cout << "Usunieto osobe";
+            }
+
+            brakOsob++;
+            break;
+        }
+    }
+
+    wyswietlInformacjeOBrakuOsob(brakOsob, tresc);
+    pokazKomunikatKoncowy();
+}
+
+void wyswietlPodmenu() {
+    cout << endl << "1. Zmien imie ";
+    cout << endl << "2. Zmien nazwisko ";
+    cout << endl << "3. Zmien numer telefonu ";
+    cout << endl << "4. Zmien adres zamieszkania ";
+    cout << endl << "5. Zmien email ";
+    cout << endl << "9. Wyjdz ";
+}
+
+void edytujDane(vector<Osoba>& osoby) {
+    int wejscie;
+    int brakOsob = 0;
+    char znak;
+    string tresc = "id";
+
+    system("cls");
+    cout << "Wpisz id osoby ktora chcesz edytowac: ";
+
+    wejscie = stoi(wczytajLinie());
+
+    for (size_t i = 0; i < osoby.size(); i++) {
+
+        if (osoby[i].id == wejscie) {
+            wyswietlPodsumowanieDanych(osoby[i]);
+            wyswietlPodmenu();
+
+            cout << endl << "Wybierz co chcesz zmienic: ";
+            znak = wczytajZnak();
+
+            switch (znak) {
+            case '1':
+                cout << endl << "Wpisz nowe imie: ";
+                osoby[i].imie = wczytajLinie();
+                break;
+            case '2':
+                cout << endl << "Wpisz nowe nazwisko: ";
+                osoby[i].nazwisko = wczytajLinie();
+                break;
+            case '3':
+                cout << endl << "Wpisz nowy numer telefonu: ";
+                osoby[i].nrTel = wczytajLinie();
+                break;
+            case '4':
+                cout << endl << "Wpisz nowy adres zamieszkania: ";
+                osoby[i].adresZamieszkania = wczytajLinie();
+                break;
+            case '5':
+                cout << endl << "Wpisz nowy email: ";
+                osoby[i].email = wczytajLinie();
+                break;
+            case '9':
+                exit(1);
+                break;
+            default:
+                cout << "Bledny wybor";
+                system("pause");
+                break;
+            }
+
+            rekonstruujPlik(osoby);
+            cout << "Zmieniono dane" << endl;
+
+            brakOsob++;
+            break;
+        }
+    }
+
+    wyswietlInformacjeOBrakuOsob(brakOsob, tresc);
+    pokazKomunikatKoncowy();
+}
+
+int main() {
+    vector <Osoba> osoby;
+    char wybor = {0};
+
+    wczytajOsobyZPliku(osoby); //uzupelnia vector struktur, danymi z pliku tekstowego tak, zeby przy ponownym uruchomieniu moglo kontynuowac ksiazke
+
+    while (1) {
+        wybor = wyswietlMenuGlowne();
+
+        switch (wybor) {
+        case '1':
+            dodajOsobe(osoby);
+            break;
+        case '2':
+            znajdzOsobePoImieniu(osoby);
+            break;
+        case '3':
+            znajdzOsobePoNazwisku(osoby);
+            break;
+        case '4':
+            pokazWszystkieOsoby(osoby);
+            break;
+        case '5':
+            usunOsobe(osoby);
+            break;
+        case '6':
+            edytujDane(osoby);
+            break;
+        case '9':
+            exit(1);
+            break;
+        default:
+            cout << "Bledny wybor";
+            system("pause");
+        }
+    }
+    return 0;
+}
